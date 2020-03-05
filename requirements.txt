@@ -1,0 +1,7 @@
+tensorflow
+numpy
+gym
+random
+math
+statistics
+collections
