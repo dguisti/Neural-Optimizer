@@ -22,6 +22,7 @@ EXPLORATION_DECAY = 0.995
 EPOCHS = 10
 
 LEARNING_SIZE = 100000000000000
+INDIVIDUAL_LEARNING = False
 
 class Teacher_Agent:
     '''
@@ -102,14 +103,15 @@ class Teacher_Agent:
         for state, reward, state_next in batch:
             q_update = (reward + GAMMA * np.amax(self.model.predict(state_next)))
             self.q_values = self.model.predict(state)
-            q_values_old = self.q_values[0][self.actionList.index(action[0])]
-            self.q_values[0][self.actionList.index(action[0])] = (1-ALPHA)*q_values_old + ALPHA*q_update 
+            q_values_old = self.q_values#[0][self.actionList.index(action[0])]
+            self.q_values = (1-ALPHA)*q_values_old + ALPHA*q_update #[0][self.actionList.index(action[0])]
             if INDIVIDUAL_LEARNING:
                 self.model.fit(state, self.q_values, epochs=EPOCHS, verbose=0)
             else:
                 states_batch.append(state[0])
                 q_values_batch.append(self.q_values[0])
-
+        #self.q_values = self.q_values[0]
+        self.q_values = self.q_values[:4] + [int(y) for y in self.q_values[5:]]
         #self.model.fit(self.state, tf.convert_to_tensor([self.q_values]), epochs=100, verbose=0)
         #self.q_values = [int(val) for val in self.model.predict(self.state)[0]]
         self.state_next = tf.convert_to_tensor([self.q_values])
@@ -123,7 +125,7 @@ class Teacher_Agent:
         print("Epochs:", self.q_values[5])
         print("Loss:", list(lossListCalls.keys())[self.q_values[6]])
         print("Optimizer:", list(optListCalls.keys())[self.q_values[7]])
-        q_val_layers = self.q_values[8:]
+        q_val_layers = self.q_values[9:]
         q_layers = []
         i = 0
         for i in range(0, len(q_val_layers), 2):
