@@ -24,6 +24,8 @@ EPOCHS = 10
 LEARNING_SIZE = 100000000000000
 INDIVIDUAL_LEARNING = False
 
+
+
 class Teacher_Agent:
     '''
     Our Agent that uses Q-Learning to create a "smart" agent.
@@ -52,6 +54,8 @@ class Teacher_Agent:
         EXPLORATION_MIN = 0.01
         EXPLORATION_DECAY = 0.995
 
+        POSSIBLE_LAYERS = 10
+
         self.exploration_rate = EXPLORATION_MAX
         self.action_space = 9
         MSE = list(lossListCalls.keys()).index("mse")
@@ -60,7 +64,9 @@ class Teacher_Agent:
         input_size = 5
         initial_layers = 2
         initial_epochs = 5
-        initial_state = [GAMMA, ALPHA, EXPLORATION_MAX, EXPLORATION_MIN, EXPLORATION_DECAY, 5, MSE, ADAM, RELU, input_size, RELU, 24, RELU, 12]
+        initial_blank_layers = [[RELU, 0] for i in range(POSSIBLE_LAYERS)]
+        blank_layers = [item for sublist in initial_blank_layers for item in sublist]
+        initial_state = [GAMMA, ALPHA, EXPLORATION_MAX, EXPLORATION_MIN, EXPLORATION_DECAY, 5, MSE, ADAM, RELU, input_size, RELU, 24, RELU, 12] + blank_layers
         initial_state_tensor = tf.convert_to_tensor([initial_state])
         self.state = initial_state_tensor
         self.q_values = initial_state
@@ -115,7 +121,9 @@ class Teacher_Agent:
         #self.model.fit(self.state, tf.convert_to_tensor([self.q_values]), epochs=100, verbose=0)
         #self.q_values = [int(val) for val in self.model.predict(self.state)[0]]
         self.state_next = tf.convert_to_tensor([self.q_values])
-
+        if self.q_values[5] == 0:
+            print("Network Returned 0 Epochs")
+            return
         print(self.q_values)
         print("Gamma:", self.q_values[0])
         print("Alpha:", self.q_values[1])
