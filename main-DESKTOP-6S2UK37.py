@@ -54,9 +54,10 @@ class Teacher_Agent:
         EXPLORATION_MIN = 0.01
         EXPLORATION_DECAY = 0.995
 
-        POSSIBLE_LAYERS = 3
+        POSSIBLE_LAYERS = 10
 
         self.exploration_rate = EXPLORATION_MAX
+        self.action_space = 9
         MSE = list(lossListCalls.keys()).index("mse")
         RELU = list(actListCalls.keys()).index("relu")
         ADAM = list(optListCalls.keys()).index("Adam")
@@ -71,7 +72,6 @@ class Teacher_Agent:
         self.q_values = initial_state
         self.state_next = self.state
         self.observation_space = len(initial_state)
-        self.action_space = self.observation_space
         self.reward = 0
 
         #create the space to store "training" steps
@@ -107,26 +107,23 @@ class Teacher_Agent:
     
         #use each set of data to improve the Q values
         for state, reward, state_next in batch:
-            self.q_values = list(self.model.predict(state_next)[0])
-            #print("stuff")
-            #q_update = (reward + GAMMA * np.amax(self.model.predict(state_next)))
-            #self.q_values = self.model.predict(state)
-            #q_values_old = self.q_values#[0][self.actionList.index(action[0])]
-            #self.q_values = (1-ALPHA)*q_values_old + ALPHA*q_update #[0][self.actionList.index(action[0])]
-            #if INDIVIDUAL_LEARNING:
-            #    self.model.fit(state, self.q_values, epochs=EPOCHS, verbose=0)
-            #else:
-            #    states_batch.append(state[0])
-            #    q_values_batch.append(self.q_values[0])
+            q_update = (reward + GAMMA * np.amax(self.model.predict(state_next)))
+            self.q_values = self.model.predict(state)
+            q_values_old = self.q_values#[0][self.actionList.index(action[0])]
+            self.q_values = (1-ALPHA)*q_values_old + ALPHA*q_update #[0][self.actionList.index(action[0])]
+            if INDIVIDUAL_LEARNING:
+                self.model.fit(state, self.q_values, epochs=EPOCHS, verbose=0)
+            else:
+                states_batch.append(state[0])
+                q_values_batch.append(self.q_values[0])
         #self.q_values = self.q_values[0]
-        self.q_values = [max(0,valueVal) for valueVal in self.q_values]
-        self.q_values = self.q_values[:5] + [int(y) for y in self.q_values[5:]]
+        self.q_values = self.q_values[:4] + [int(y) for y in self.q_values[5:]]
         #self.model.fit(self.state, tf.convert_to_tensor([self.q_values]), epochs=100, verbose=0)
         #self.q_values = [int(val) for val in self.model.predict(self.state)[0]]
         self.state_next = tf.convert_to_tensor([self.q_values])
         if self.q_values[5] == 0:
             print("Network Returned 0 Epochs")
-            #return
+            return
         print(self.q_values)
         print("Gamma:", self.q_values[0])
         print("Alpha:", self.q_values[1])
@@ -136,7 +133,7 @@ class Teacher_Agent:
         print("Epochs:", self.q_values[5])
         print("Loss:", list(lossListCalls.keys())[self.q_values[6]])
         print("Optimizer:", list(optListCalls.keys())[self.q_values[7]])
-        q_val_layers = self.q_values[10:]
+        q_val_layers = self.q_values[9:]
         q_layers = []
         i = 0
         for i in range(0, len(q_val_layers), 2):
